@@ -5,7 +5,7 @@
  const nodemailer = require('nodemailer');
  const PDFDocument = require('pdfkit');
 const fs = require('fs');
-const os = require('os');  
+const os = require('os'); 
 
  const app = express();
  app.use(cors());
@@ -60,6 +60,57 @@ const os = require('os');
    })
  })
 
+app.get('/offre/:id', (req, res) =>{
+  const sql= "UPDATE offre SET `name`=?,`description`=?,`experience`=?,`imageSrc`=?,`date`=? WHERE ID=?";
+  const id=req.params.id;
+  db.query(sql,[ req.body.name,
+    req.body.description,
+    req.body.experience,
+    req.body.imageSrc,
+    req.body.date, id]),
+    (err, result)=>{
+      if(err) {
+        return res.status(500).json({ message: "Server Error" });
+      }
+      return res.status(200).json(result);
+   } });
+    
+  /*app.post('/modifierOffre', async (req, res) => {
+    const {
+      id,
+      name,
+      description,
+      experience,
+      imageSrc,
+      date,
+    } = req.body;
+  
+    const updateQuery = `
+      UPDATE offre
+      SET name = ?,
+          description = ?,
+          experience = ?,
+          imageSrc = ?,
+          date = ?
+      WHERE id = ?
+    `;
+  
+    db.query(updateQuery, [name, description, experience, imageSrc, date, id], (err, results) => {
+      if (err) {
+        console.error('Error:', err);
+        res.status(500).json({ message: 'Server error' });
+      } else {
+        if (results.affectedRows === 0) {
+          res.status(404).json({ message: 'Offer not found' });
+        } else {
+          res.json({ message: 'Offer updated successfully' });
+        }
+      }
+    });
+  });*/
+  
+
+
  app.get('/offre', (req, res)=>{
    db.query('SELECT * FROM offre', (err, results) => {
       if (err){
@@ -83,6 +134,48 @@ const os = require('os');
    });
  });
 
+ app.delete('/offre/:id', (req, res) => {
+  const offreId = req.params.id;
+  
+  // Use SQL to delete the "offre" with the specified ID from your database
+  const sql = "DELETE FROM offre WHERE id = ?";
+  
+  db.query(sql, [offreId], (err, result) => {
+    if (err) {
+      console.error("Error deleting 'offre':", err);
+      res.status(500).json({ error: "An error occurred while deleting the 'offre'." });
+    } else {
+      // Check if any rows were affected; if not, the "offre" with the provided ID doesn't exist
+      if (result.affectedRows === 0) {
+        res.status(404).json({ error: "The 'offre' with the specified ID was not found." });
+      } else {
+        // Successful deletion
+        res.status(204).send();
+      }
+    }
+  });
+});
+
+app.post('/modifierOffre', (req, res) => {
+  const { id, name, description, experience, imageSrc, date } = req.body;
+  
+  // Use a SQL UPDATE statement to modify the offer
+  const sql = 'UPDATE offers SET name = ?, description = ?, experience = ?, imageSrc = ?, date = ? WHERE id = ?';
+  const values = [name, description, experience, imageSrc, date, id];
+  
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Error:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+
+    return res.json({ message: 'Offer modified successfully' });
+  });
+});
+
+/*app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});*/
 
  app.post('/nbPostulant', (req, res) =>{
    const sql= "INSERT INTO offre (`Postulant`) VALUES (?)";
@@ -200,7 +293,8 @@ const os = require('os');
          res.json(results);
       }
    });
- }); 
+ });
+  
  app.get('/nbCandidature', (req, res)=>{
    db.query('SELECT COUNT(*) as nbCandidature FROM account', (err, results) => {
       if (err){
@@ -219,6 +313,25 @@ const os = require('os');
     pass: '13ORNELLA', // Votre mot de passe
   },
 });
+app.put('/modifierOffre/:id', (req, res) => {
+  const id = req.params.id; // Assuming you have an "id" parameter in the URL to specify which record to update.
+  const sql = "UPDATE offre SET `name`=?, `description`=?, `experience`=?, `imageSrc`=?, `date`=? WHERE id=?";
+   
+  const values = [
+    req.body.name,
+    req.body.description,
+    req.body.experience,
+    req.body.imageSrc,
+    req.body.date,
+    id // Make sure to include the ID to specify which record to update.
+  ];
+  });
+
+
+/*app.delete('/supprOffre/:id', (req, res) => {
+  const id = req.params.id; // Assuming you have an "id" parameter in the URL to specify which record to delete.
+  const sql = "DELETE FROM offre WHERE id = ?";
+});*/
 
  app.post('/envoyer-email', (req, res) => {
   const message = req.body.message; // Récupérez le message du formulaire
